@@ -12,16 +12,27 @@ namespace HybridCLR.Editor.CrashWorkarounds
 
         public void OnPreprocessBuild(BuildReport report)
         {
-            if (report.summary.platform == BuildTarget.Android ||
-                report.summary.platform == BuildTarget.iOS)
+            switch (report.summary.platform)
             {
-                var src = "Packages/com.modx.hybridclr-crash-workarounds/Runtime/Source~";
-                var dst = Path.Combine(SettingsUtil.LocalIl2CppDir, "libil2cpp/hybridclr");
-                var file = "HybridCLRCrashWorkarounds.cpp";
+                case BuildTarget.Android:
+                case BuildTarget.iOS:
+#if TUANJIE_1_0_OR_NEWER
+                case BuildTarget.OpenHarmony:
+#endif
+                    {
+                        var src = "Packages/com.modx.hybridclr-crash-workarounds/Runtime/Source~";
+                        var dst = Path.Combine(SettingsUtil.LocalIl2CppDir, "libil2cpp/hybridclr");
+                        var file = "HybridCLRCrashWorkarounds.cpp";
 
-                File.Copy(Path.Combine(src, file), Path.Combine(dst, file), true);
+                        File.Copy(Path.Combine(src, file), Path.Combine(dst, file), true);
 
-                Debug.Log("Copied HybridCLRCrashWorkarounds.cpp");
+                        Debug.Log("Copied HybridCLRCrashWorkarounds.cpp");
+
+                        break;
+                    }
+
+                default:
+                    break;
             }
         }
     }

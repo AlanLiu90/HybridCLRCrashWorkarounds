@@ -31,7 +31,7 @@ extern "C"
     static std::string sErrorMessage;
     static std::string sExceptionMessage;
 
-#if IL2CPP_TARGET_ANDROID
+#if IL2CPP_TARGET_ANDROID || IL2CPP_TARGET_OPENHARMONY
   #if IL2CPP_TARGET_ARMV7
     static int32_t sCreateMonoScriptFromScriptingTypeSymbolOffset = 0; // ARMv7
   #elif IL2CPP_TARGET_ARM64
@@ -62,7 +62,7 @@ extern "C"
             if (data == nullptr || dataLength < 4 || memcmp(data, "UMSB", 4) != 0)
                 il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetArgumentException("", "Invalid data"));
 
-#if IL2CPP_TARGET_ANDROID
+#if IL2CPP_TARGET_ANDROID || IL2CPP_TARGET_OPENHARMONY
             typedef void* (*CreateMonoScriptFromScriptingType)(ScriptingClassPtr ptr);
             Il2CppMethodPointer baseAddress = il2cpp_codegen_resolve_icall("UnityEngine.GameObject::Internal_AddComponentWithType(System.Type)");
             CreateMonoScriptFromScriptingType func = (CreateMonoScriptFromScriptingType)((uint8_t*)baseAddress + sCreateMonoScriptFromScriptingTypeSymbolOffset);
@@ -128,7 +128,7 @@ extern "C"
 
 #if IL2CPP_TARGET_IOS
                         void *ptr = CreateMonoScriptFromScriptingType(klass);
-#elif IL2CPP_TARGET_ANDROID
+#elif IL2CPP_TARGET_ANDROID || IL2CPP_TARGET_OPENHARMONY
                         void *ptr = func(klass);
 #endif
                         if (!validated)

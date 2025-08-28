@@ -22,6 +22,28 @@
 	* 反射: 需要自己过滤掉编辑器内的`MonoBehaviour`和`ScriptableObject`(比如定义了`UNITY_EDITOR`才启用的类型)
 	* dnlib解析: 由于是从打包编译的dll中收集`MonoScript`，所以不会有编辑器内的`MonoBehaviour`和`ScriptableObject`。这种方法用到了打包生成的AOT dll，需要在`HybridCLR/Generate/All`之后执行
 
+### 兼容旧包
+对于线上已有包体的情况，可以在热更dll中这样实现：
+```C#
+private void CreateMonoScripts()
+{
+	if (/* 判断是新包 */)
+		CreateMonoScriptsInternal();
+}
+
+private void CreateMonoScriptsInternal()
+{
+	var bytes = /* 加载 MonoScripts.bytes */;
+	HybridCLRCrashWorkarounds.CreateMonoScripts(bytes);
+}
+```
+
+### 性能
+对于3757个MonoScript的情况，使用Unity 2020.3.60f1测试`HybridCLRCrashWorkarounds.CreateMonoScripts`的耗时：
+* Redmi 8A: 约750ms
+* Xiaomi Mi 10: 约180ms
+* iPad 9th generation: 约90ms
+
 ## 崩溃调用栈例子
 1. 该调用栈是本地复现工程在Android设备上出现的(Unity 2022.3.60f1)，确认集成本工具后不再出现
 ```

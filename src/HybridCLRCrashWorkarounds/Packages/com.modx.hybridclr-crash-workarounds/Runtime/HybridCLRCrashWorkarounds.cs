@@ -7,7 +7,7 @@ namespace HybridCLR
 {
     public static class HybridCLRCrashWorkarounds
     {
-#if (UNITY_IOS || UNITY_ANDROID) && !UNITY_EDITOR
+#if (UNITY_IOS || UNITY_ANDROID || UNITY_OPENHARMONY) && !UNITY_EDITOR
         [DllImport("__Internal")]
         private static extern unsafe int CreateMonoScriptsInternal(byte* data, int length, [MarshalAs(UnmanagedType.U1)] bool isDebugBuild, out int errorMessageLength, out int exceptionMessageLength);
 
@@ -18,7 +18,7 @@ namespace HybridCLR
         private static extern unsafe void GetExceptionMessageAndClear(byte* buffer);
 #endif
 
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_OPENHARMONY) && !UNITY_EDITOR
         [DllImport("__Internal")]
         private static extern unsafe void SetCreateMonoScriptFromScriptingTypeSymbolOffset(int symbolOffset);
 
@@ -30,7 +30,7 @@ namespace HybridCLR
         {
             get
             {
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_OPENHARMONY) && !UNITY_EDITOR
                 return GetCreateMonoScriptFromScriptingTypeSymbolOffset();
 #else
                 return 0;
@@ -39,7 +39,7 @@ namespace HybridCLR
 
             set
             {
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_OPENHARMONY) && !UNITY_EDITOR
                 SetCreateMonoScriptFromScriptingTypeSymbolOffset(value);
 #endif
             }
@@ -47,12 +47,12 @@ namespace HybridCLR
 
         public static void CreateMonoScripts(byte[] data)
         {
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_OPENHARMONY) && !UNITY_EDITOR
             if (SymbolOffset == 0)
                 throw new Exception("Invalid symbol offset");
 #endif
 
-#if (UNITY_IOS || UNITY_ANDROID) && !UNITY_EDITOR
+#if (UNITY_IOS || UNITY_ANDROID || UNITY_OPENHARMONY) && !UNITY_EDITOR
             unsafe
             {
                 int errorMessageLength;

@@ -1,12 +1,15 @@
 using System.IO;
-using UnityEditor.Android;
-using UnityEditor.Build.Reporting;
-using UnityEditor.Build;
-using UnityEditor;
-using UnityEngine;
 using HybridCLR.Editor.CrashWorkarounds;
+using UnityEditor;
+using UnityEditor.Android;
+using UnityEditor.Build;
+using UnityEditor.Build.Reporting;
+using UnityEngine;
 
 internal sealed class SymbolOffsetsWriter : IPreprocessBuildWithReport, IPostGenerateGradleAndroidProject
+#if TUANJIE_1_0_OR_NEWER
+    , UnityEditor.OpenHarmony.IPostGenerateOpenHarmonyProject
+#endif
 {
     public int callbackOrder => 100;
 
@@ -35,8 +38,20 @@ internal sealed class SymbolOffsetsWriter : IPreprocessBuildWithReport, IPostGen
         if (writeToSourceFile)
             calculator.ModifySourceFile(outputPath);
         else
-            WriteJSON(calculator, outputPath);
+            WriteJSON(calculator, Path.Combine(outputPath, $"src/main/assets/offsets.json"));
     }
+
+#if TUANJIE_1_0_OR_NEWER
+    public void OnPostGenerateOpenHarmonyProject(string outputPath)
+    {
+        // 鸿蒙执行到这里时，libil2cpp.so已经生成了，无法像Android那样修改C++文件，只能将偏移记录到文件中
+
+        var calculator = SymbolOffsetCalculatorFactory.CreateForOpenHarmony(outputPath, mDevelopmentBuild);
+        calculator.Run();
+
+        WriteJSON(calculator, Path.Combine(outputPath, "src/main/resources/rawfile/Data/StreamingAssets/offsets.json"));
+    }
+#endif
 
     private void WriteJSON(ISymbolOffsetCalculator calculator, string outputPath)
     {
@@ -51,8 +66,7 @@ internal sealed class SymbolOffsetsWriter : IPreprocessBuildWithReport, IPostGen
             offsets.ARMv7 = offset.Value;
 
         var json = JsonUtility.ToJson(offsets);
-        var path = Path.Combine(outputPath, $"src/main/assets/offsets.json");
-        File.WriteAllText(path, json);
+        File.WriteAllText(outputPath, json);
 
         Debug.Log("Wrote offsets.json");
     }

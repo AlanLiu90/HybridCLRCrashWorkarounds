@@ -1,4 +1,4 @@
-namespace HybridCLR.Editor.CrashWorkarounds
+﻿namespace HybridCLR.Editor.CrashWorkarounds
 {
     public sealed class SymbolOffsetCalculatorFactory
     {
@@ -9,5 +9,12 @@ namespace HybridCLR.Editor.CrashWorkarounds
         {
             return new SymbolOffsetCalculatorAndroid(TargetSymbolPattern, DefaultBaseSymbolPattern, gradleProjectDir, developmentBuild);
         }
+
+#if TUANJIE_1_0_OR_NEWER
+        public static ISymbolOffsetCalculator CreateForOpenHarmony(string gradleProjectDir, bool developmentBuild)
+        {
+            return new SymbolOffsetCalculatorOpenHarmony(TargetSymbolPattern, DefaultBaseSymbolPattern, gradleProjectDir, developmentBuild);
+        }
+#endif
     }
 }
