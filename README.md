@@ -20,7 +20,7 @@
 4. 调用工具的接口创建`MonoScript`，需要在HybridCLR加载热更dll之后
 5. 工具提供了2种方式收集`MonoScript`：反射和使用dnlib解析。两者的区别:
 	* 反射: 需要自己过滤掉编辑器内的`MonoBehaviour`和`ScriptableObject`(比如定义了`UNITY_EDITOR`才启用的类型)
-	* dnlib解析: 由于是从打包编译的dll中收集`MonoScript`，所以不会有编辑器内的`MonoBehaviour`和`ScriptableObject`。这种方法用到了打包生成的AOT dll，需要在`HybridCLR/Generate/All`之后执行
+	* dnlib解析: 由于是从打包编译的dll中收集`MonoScript`，所以不会有编辑器内的`MonoBehaviour`和`ScriptableObject`。这种方法用到了最新版本的AOT dll，需要有合适的时机执行。比如在`HybridCLR/Generate/All`之后执行
 
 ### 兼容旧包
 对于线上已有包体的情况，可以在热更dll中这样实现：

@@ -1,24 +1,41 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
 using HybridCLR.Editor.Meta;
+using UnityEditor;
 
 namespace HybridCLR.Editor.CrashWorkarounds
 {
     public static class MonoScriptProviderFactory
     {
         /// <summary>
-        /// Ê¹ÓÃdnlib½âÎö·½Ê½ÊÕ¼¯MonoScript
+        /// ä½¿ç”¨dnlibè§£ææ–¹å¼æ”¶é›†MonoScript
         /// </summary>
-        /// <param name="targetDlls">ĞèÒªÊÕ¼¯MonoScriptµÄdll</param>
-        /// <param name="allHotUpdateDlls">ËùÓĞÈÈ¸üdll</param>
+        /// <param name="targetDlls">éœ€è¦æ”¶é›†MonoScriptçš„dll</param>
+        /// <param name="allHotUpdateDlls">æ‰€æœ‰çƒ­æ›´dll</param>
+        /// <param name="aotDllDir">AOT dllçš„æ‰€åœ¨ç›®å½•ï¼Œé»˜è®¤ä¸º HybridCLRData/AOTDllOutput/&lt;PLATFORM&gt;</param>
         /// <remarks>
-        /// ÉçÇø°æ: µÚ¶ş¸ö²ÎÊı´« SettingsUtil.HotUpdateAssemblyNamesExcludePreserved
-        /// DHE°æ: µÚ¶ş¸ö²ÎÊı´« SettingsUtil.HotUpdateAndDHEAssemblyNamesExcludePreserved
+        /// ç¤¾åŒºç‰ˆ: ç¬¬äºŒä¸ªå‚æ•°ä¼  SettingsUtil.HotUpdateAssemblyNamesExcludePreserved <br />
+        /// DHEç‰ˆ: ç¬¬äºŒä¸ªå‚æ•°ä¼  SettingsUtil.HotUpdateAndDHEAssemblyNamesExcludePreserved
         /// </remarks>
-        public static IMonoScriptProvider Create(IEnumerable<string> targetDlls, IEnumerable<string> allHotUpdateDlls)
+        public static IMonoScriptProvider Create(IEnumerable<string> targetDlls, IEnumerable<string> allHotUpdateDlls, string aotDllDir = null)
         {
-            var cache = new AssemblyCache(MetaUtil.CreateHotUpdateAndAOTAssemblyResolver(EditorUserBuildSettings.activeBuildTarget, allHotUpdateDlls.ToList()));
+            var target = EditorUserBuildSettings.activeBuildTarget;
+
+            IAssemblyResolver assemblyResolver;
+
+            if (string.IsNullOrEmpty(aotDllDir))
+            {
+                assemblyResolver = MetaUtil.CreateHotUpdateAndAOTAssemblyResolver(target, allHotUpdateDlls.ToList());
+            }
+            else
+            {
+                assemblyResolver = new CombinedAssemblyResolver(
+                    MetaUtil.CreateHotUpdateAssemblyResolver(target, allHotUpdateDlls.ToList()),
+                    new PathAssemblyResolver(aotDllDir),
+                    new PathAssemblyResolver(SettingsUtil.GetHotUpdateDllsOutputDirByTarget(target)));
+            }
+
+            var cache = new AssemblyCache(assemblyResolver);
             var analyzer = new MonoScriptAnalyzer(cache, targetDlls);
             analyzer.Run();
 
@@ -26,9 +43,9 @@ namespace HybridCLR.Editor.CrashWorkarounds
         }
 
         /// <summary>
-        /// Ê¹ÓÃ·´Éä·½Ê½ÊÕ¼¯MonoScript
+        /// ä½¿ç”¨åå°„æ–¹å¼æ”¶é›†MonoScript
         /// </summary>
-        /// <param name="targetDlls">ĞèÒªÊÕ¼¯MonoScriptµÄdll</param>
+        /// <param name="targetDlls">éœ€è¦æ”¶é›†MonoScriptçš„dll</param>
         public static IMonoScriptProvider Create(IEnumerable<string> targetDlls)
         {
             var reflector = new MonoScriptReflector(targetDlls);
