@@ -8,12 +8,12 @@
 
 ## 集成
 
-1. 引用包com.modx.hybridclr-crash-workarounds
+1. 引用包com.modx.hybridclr-crash-workarounds，参考格式: https://github.com/AlanLiu90/HybridCLRCrashWorkarounds.git?path=/src/HybridCLRCrashWorkarounds/Packages/com.modx.hybridclr-crash-workarounds#v1.0.0
 2. 打包时将热更dll中的`MonoScript`的信息写入一个文件，可参考 demo\HybridCLRTrial\Assets\Editor\MyMonoScriptWriter.cs
 3. 打包时记录符号的偏移，可参考 demo\HybridCLRTrial\Assets\Editor\SymbolOffsetsWriter.cs
 4. 运行时加载记录`MonoScript`的信息的文件和记录符号的偏移的文件，调用工具的接口创建`MonoScript`，可参考 demo\HybridCLRTrial\Assets\HotUpdate\Test.cs
 
-### 说明:
+### 说明
 1. 只有Android需要记录符号的偏移，如果只对iOS使用，可以跳过第三步
 2. 第二步生成的文件的内容是对应热更dll的，需要热更
 3. 第三步生成的文件的内容是对应包体的，不需要热更
@@ -45,7 +45,7 @@ private void CreateMonoScriptsInternal()
 * iPad 9th generation: 约90ms
 
 ## 崩溃调用栈例子
-1. 该调用栈是本地复现工程在Android设备上出现的(Unity 2022.3.60f1)，确认集成本工具后不再出现
+1. 该调用栈是本地复现工程在Android设备上出现的(Unity 2022.3.60f1)
 ```
 #00 pc 0000000001337f3c (std::__ndk1::__shared_weak_count::__release_weak() at /buildbot/src/android/ndk-release-r23\toolchain/llvm-project/libcxx/src/memory.cpp:0) 
 #01 pc 00000000008dbc70 (FindOrCreateMonoScriptCache(ScriptingClassPtr, InitScriptingCacheType, Object*, int, core::basic_string<char, core::StringStorageDefault<char> >) at ??:0)
@@ -61,23 +61,24 @@ private void CreateMonoScriptsInternal()
 #11 pc 000000000087bfb8 (Thread::RunThreadWrapper(void*) at ??:0)
 ```
 
-2. 该调用栈是某个项目线上在iOS设备上出现的(Unity 2022.3.57f1)，目前还在等该项目集成本工具
+2. 该调用栈是项目线上在iOS设备上出现的(Unity 2022.3.60f1)
 ```
-1 lookup<long, core::equal_pair<std::equal_to<long>, long, std::weak_ptr<MonoScriptCache> > > (./Runtime/Core/Containers/hash_set.h:948)
-2 lookup<long, core::equal_pair<std::equal_to<long>, long, std::weak_ptr<MonoScriptCache> > > (./Runtime/Core/Containers/hash_set.h:943)
-3 GetMonoScriptCache (./Runtime/Core/Containers/hash_map.h:210)
-4 FindOrCreateMonoScriptCache (./Runtime/Mono/MonoScriptCache.cpp:625)
-5 SetupScriptingCache (./Runtime/Scripting/ManagedReference/SerializableManagedRef.cpp:190)
-6 RebuildMonoInstance (./Runtime/Scripting/ManagedReference/SerializableManagedRef.cpp:222)
-7 RebuildMonoInstanceFromScriptChange (./Runtime/Scripting/ManagedReference/SerializableManagedRef.cpp:282)
-8 RebuildMonoInstanceFromScriptChange (./Runtime/Mono/ManagedMonoBehaviourRef.cpp:306)
-9 SetScript (./Runtime/Scripting/ManagedReference/SerializableManagedRef.cpp:418)
-10 ProduceClone (./Runtime/GameCode/CloneObject.cpp:62)
-11 CollectAndProduceGameObjectHierarchy (./Runtime/GameCode/CloneObject.cpp:89)
-12 CollectAndProduceClonedIsland (./Runtime/GameCode/CloneObject.cpp:235)
-13 CloneObjectImpl (./Runtime/GameCode/CloneObject.cpp:308)
-14 CloneObject (./Runtime/GameCode/CloneObject.cpp:566)
-15 Object_CUSTOM_Internal_CloneSingleWithParent (artifacts/iOS/Modules/iOS_arm64_nondev_i_r/Bindings/CoreBindings.gen.cpp:62420)
-16 Object_Instantiate_m99F2A72EF6BFE09E6CF4FCF6207C5BCFAD1D76CF
+0 0x00000001089755a8 core::hash_set<core::pair<long const, std::__1::weak_ptr<MonoScriptCache>, false>, core::hash_pair<core::hash<long>, long, std::__1::weak_ptr<MonoScriptCache>>, core::equal_pair<std::__1::equal_to<... + 52 (hash_set.h:948)
+1 0x0000000108973028 find + 12 (hash_map.h:210)
+2 0x0000000108973028 ScriptingManager::GetMonoScriptCache(long) + 44 (ScriptingManager.cpp:270)
+3 0x0000000108985378 FindMonoScriptCache + 16 (MonoScriptCache.cpp:625)
+4 0x0000000108985378 FindOrCreateMonoScriptCache(ScriptingClassPtr, InitScriptingCacheType, Object*, int, core::basic_string<char, core::StringStorageDefault<char>>) + 72 (MonoScriptCache.cpp:630)
+5 0x00000001089c42f8 SerializableManagedRef::SetupScriptingCache(Object*, ScriptingClassPtr, MonoScript*) + 144 (SerializableManagedRef.cpp:190)
+6 0x00000001089c4674 SerializableManagedRef::RebuildMonoInstance(Object*, ScriptingClassPtr, ScriptingObjectPtr, MonoScript*) + 92 (SerializableManagedRef.cpp:222)
+7 0x00000001089c4c94 SerializableManagedRef::RebuildMonoInstanceFromScriptChange(Object*, ScriptingClassPtr, ScriptingObjectPtr) + 164 (SerializableManagedRef.cpp:282)
+8 0x0000000108981c70 ManagedMonoBehaviourRef::RebuildMonoInstanceFromScriptChange(Object*, ScriptingClassPtr, ScriptingObjectPtr) + 76 (ManagedMonoBehaviourRef.cpp:306)
+9 0x00000001089c52c0 SerializableManagedRef::SetScript(Object*, PPtr<MonoScript>, ScriptingObjectPtr) + 284 (SerializableManagedRef.cpp:418)
+10 0x00000001087a0a68 ProduceClone(Object&) + 260 (CloneObject.cpp:62)
+11 0x000000010879e60c CollectAndProduceGameObject + 140 (CloneObject.cpp:89)
+12 0x000000010879e60c CollectAndProduceGameObjectHierarchy(Transform&, Transform*, vector_map<int, int, std::__1::less<int>, stl_allocator<std::__1::pair<int, int>, (MemLabelIdentifier)1, 16>>&) + 812 (CloneObject.cpp:142)
+13 0x000000010879e294 CollectAndProduceClonedIsland(Object&, Transform*, vector_map<int, int, std::__1::less<int>, stl_allocator<std::__1::pair<int, int>, (MemLabelIdentifier)1, 16>>&) + 160 (CloneObject.cpp:235)
+14 0x000000010879f5e0 CloneObjectImpl(Object*, Transform*, vector_map<int, int, std::__1::less<int>, stl_allocator<std::__1::pair<int, int>, (MemLabelIdentifier)1, 16>>&) + 44 (CloneObject.cpp:308)
+15 0x000000010879f3f4 CloneObject(Object&) + 76 (CloneObject.cpp:495)
+16 0x000000010869f270 Object_CUSTOM_Internal_CloneSingle(ScriptingBackendNativeObjectPtrOpaque*) + 88 (CoreBindings.gen.cpp:62279)
 ...
 ```
