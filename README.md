@@ -2,9 +2,20 @@
 
 本工具用于规避HybridCLR引发的Unity崩溃问题，详见[文章](https://alanliu90.hatenablog.com/entry/2023/12/22/%E6%8E%92%E6%9F%A5HybridCLR%E5%BC%95%E5%8F%91%E7%9A%84%E5%B4%A9%E6%BA%83%E9%97%AE%E9%A2%98)
 
+简单来说，使用HybridCLR导致Unity无法在启动时创建热更dll中的`MonoScript`（`MonoBehaviour`和`ScriptableObject`）的缓存。在这种情况下，运行时可能多线程对这部分数据进行修改，从而导致崩溃
+
+比如：
+1. 异步加载预制体时，主线程调用`GameObject.AddComponent`（预制体包含热更dll中的`MonoBehaviour`、`AddComponent`的类型是热更dll中的`MonoBehaviour`）
+2. 异步加载预制体时，主线程调用`Object.Destroy`销毁从另一个预制体实例化出来的对象（预制体包含热更dll中的`MonoBehaviour`）
+
+本工具利用Unity的一个内部方法，主动提前创建`MonoScript`的缓存，从而避免后续出现多线程修改的情况
+
 支持平台:
 * Android
 * iOS
+
+已验证版本（理论上兼容HybridCLR支持的所有Unity版本）:
+* 2022.3.60f1
 
 ## 集成
 
@@ -33,19 +44,19 @@ private void CreateMonoScripts()
 
 private void CreateMonoScriptsInternal()
 {
-	var bytes = /* 加载 MonoScripts.bytes */;
+	byte[] bytes = /* 加载 MonoScripts.bytes */;
 	HybridCLRCrashWorkarounds.CreateMonoScripts(bytes);
 }
 ```
 
 ### 性能
-对于3757个`MonoScript`的情况，使用Unity 2020.3.60f1测试`HybridCLRCrashWorkarounds.CreateMonoScripts`的耗时：
+对于3757个`MonoScript`的情况，使用Unity 2022.3.60f1测试`HybridCLRCrashWorkarounds.CreateMonoScripts`的耗时：
 * Redmi 8A: 约750ms
 * Xiaomi Mi 10: 约180ms
 * iPad 9th generation: 约90ms
 
 ## 崩溃调用栈例子
-1. 该调用栈是本地复现工程在Android设备上出现的(Unity 2022.3.60f1)
+1. 该调用栈是本地复现工程在Android设备上出现的（Unity 2022.3.60f1）
 ```
 #00 pc 0000000001337f3c (std::__ndk1::__shared_weak_count::__release_weak() at /buildbot/src/android/ndk-release-r23\toolchain/llvm-project/libcxx/src/memory.cpp:0) 
 #01 pc 00000000008dbc70 (FindOrCreateMonoScriptCache(ScriptingClassPtr, InitScriptingCacheType, Object*, int, core::basic_string<char, core::StringStorageDefault<char> >) at ??:0)
@@ -61,7 +72,7 @@ private void CreateMonoScriptsInternal()
 #11 pc 000000000087bfb8 (Thread::RunThreadWrapper(void*) at ??:0)
 ```
 
-2. 该调用栈是项目线上在iOS设备上出现的(Unity 2022.3.60f1)
+2. 该调用栈是项目线上在iOS设备上出现的（Unity 2022.3.60f1）
 ```
 0 0x00000001089755a8 core::hash_set<core::pair<long const, std::__1::weak_ptr<MonoScriptCache>, false>, core::hash_pair<core::hash<long>, long, std::__1::weak_ptr<MonoScriptCache>>, core::equal_pair<std::__1::equal_to<... + 52 (hash_set.h:948)
 1 0x0000000108973028 find + 12 (hash_map.h:210)
